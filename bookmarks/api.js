@@ -1,13 +1,14 @@
 const express = require('express');
 
-const dbConnect = require('../mongodb');
+const dbConnect = require('./mongodb');
 
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 
 const app = express();
 
-const {addUserValidation} = require("./validations/validation");
-const { application } = require('express');
+const mongodb = require('mongodb');
+
+// const {addUserValidation} = require("./validations/validation");
 
 
 app.use(express.json());
@@ -28,23 +29,19 @@ app.get('/:name', async (req, res) => {
     res.send(result);
 })
 
-app.post('/',addUserValidation,  async (req, res) => {
+app.post('/',  async (req, res) => {
     let data = await dbConnect();
 
-    const salt = await bcrypt.genSalt(10);
-
-    const secPass = await bcrypt.hash(req.body.password, salt);
-
-    let result = await data.insert({name:req.body.name,email:req.body.email,password:secPass,number:req.body.number})
+    let result = await data.insert(req.body)
 
     res.send(result);
 });
 
-app.put('/:name', addUserValidation, async (req, res) => {
+app.put('/:id',  async (req, res) => {
     let data = await dbConnect();
     
      let result = await data.updateOne(
-         { name: req.params.name },
+         { _id : new mongodb.ObjectId(req.params.id)  },
          {
              $set: req.body
          }
@@ -54,16 +51,14 @@ app.put('/:name', addUserValidation, async (req, res) => {
 
 });
 
-app.delete('/:name', async (req, res) => {
+app.delete('/:id', async (req, res) => {
     let data = await dbConnect();
 
     let result = await data.deleteOne(
-        { name: req.params.name }
+        { _id : new mongodb.ObjectId(req.params.id) }
     )
 
     res.send(result);
 });
-
-
 
 app.listen(3000);
